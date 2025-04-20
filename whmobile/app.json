@@ -8,16 +8,13 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "WhimLore",
-    "platforms": [
-      "ios",
-      "android",
-      "web"
-    ],
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "entryPoint": "./index.js", 
     "ios": {
       "supportsTablet": true
     },
@@ -32,7 +29,6 @@
           "apiKey": "AIzaSyDwEyfqFYC0Y7YypdUF-3icAFyFbSSRTS4"
         }
       }
-      
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -43,8 +39,7 @@
       }
     },
     "owner": "taytenacious",
-    "plugins": [
-      "expo-secure-store"
-    ]
+    "plugins": ["expo-secure-store"],
+    "assetBundlePatterns": ["**/*"]
   }
 }

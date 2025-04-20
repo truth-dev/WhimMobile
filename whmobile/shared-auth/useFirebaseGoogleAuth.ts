@@ -11,7 +11,7 @@ initializeAuth(auth.app, {
 
 export const useFirebaseGoogleAuth = () => {
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: '965290551052-4ohg96dggeou7fed96n851jevgj1fc78.apps.googleusercontent.com', // Found in Firebase or Google Cloud Console
+    clientId: '807110668374-skjoprepfpn386htfkil86is43tejb7o.apps.googleusercontent.com', // Found in Firebase or Google Cloud Console
   });
 
   useEffect(() => {

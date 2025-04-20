@@ -9,7 +9,7 @@ export const useAuth = () => {
   const auth = getAuth();
   const [user, setUser] = useState(auth.currentUser);
   const [, , promptAsync] = Google.useAuthRequest({
-    clientId: '965290551052-4ohg96dggeou7fed96n851jevgj1fc78.apps.googleusercontent.com', // from Google Cloud Console
+    clientId: '807110668374-skjoprepfpn386htfkil86is43tejb7o.apps.googleusercontent.com', // from Google Cloud Console
   });
 
   useEffect(() => {

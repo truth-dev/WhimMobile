@@ -8,8 +8,6 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../../shared-auth/useAuth';
-import { db } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
 import { useNavigation } from '@react-navigation/native';
 import mage1 from '../../assets/avatars/mage1.png';
 import rogue1 from '../../assets/avatars/rogue1.png';
@@ -17,9 +15,7 @@ import healer1 from '../../assets/avatars/healer1.png';
 import knight1 from '../../assets/avatars/knight1.png';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
-// import { useNavigation } from '@react-navigation/native';
-// import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-// import { RootStackParamList } from '../../navigation/types';
+import { submitOnboardingProfile } from '../../utils/firestoreaddhelper';
 
 const MAX_MOTTO_LENGTH = 100;
 
@@ -40,12 +36,13 @@ const JoinTheRealm = () => {
     }
 
     try {
-      await setDoc(doc(db, 'user', user.uid), {
+      await submitOnboardingProfile({
         username,
         guild: selectedGuild,
-        avatar: selectedAvatar,
         motto,
-        createdAt: new Date(),
+        avatarUri: selectedAvatar, // you may want to replace this with an actual image URI later
+        mood: 'whimsical', // or pull from a mood picker if implemented
+        additionalData: { uid: user.uid }
       });
 
       navigation.reset({
@@ -259,6 +256,4 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     marginBottom: 10,
   },
-  
-  
 });
