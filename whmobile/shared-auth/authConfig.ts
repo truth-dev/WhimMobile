@@ -1,24 +1,10 @@
-import { makeRedirectUri } from 'expo-auth-session';
+import * as AuthSession from 'expo-auth-session';
 
+// ✅ Use this in dev
+export const redirectUri = AuthSession.makeRedirectUri({
+  native:'com.googleusercontent.apps.807110668374-skjoprepfpn386htfkil86is43tejb7o:/oauth2redirect/google',
+  useProxy: false,
+  
+} as any);
 
-interface RedirectUriOptions {
-  native?: string;
-  path?: string;
-  scheme?: string;
-  preferLocalhost?: boolean;
-  isTripleSlashed?: boolean;
-  queryParams?: Record<string, string>;
-  useProxy?: boolean;
-}
-
-
-export const redirectUri = makeRedirectUri({
-  // This will log the redirect URI to the console
-    useProxy: true,
-    // For web, you can use the following line instead:
-    scheme: 'whimlore',
-    path: 'redirect',
-
-  } as RedirectUriOptions); // This is the correct way to set the redirect URI for Expo AuthSession
-
-  console.log('Redirect URI:', makeRedirectUri())
+console.log('🔮 Redirect URI:', redirectUri);

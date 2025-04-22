@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "scheme": "WhimLore",
+    "scheme": "com.googleusercontent.apps.807110668374-skjoprepfpn386htfkil86is43tejb7o",
     "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash-icon.png",

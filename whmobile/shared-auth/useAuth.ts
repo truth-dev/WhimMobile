@@ -1,15 +1,23 @@
 import { useEffect, useState } from 'react';
-import { getAuth, signInWithCredential, GoogleAuthProvider, UserCredential } from 'firebase/auth';
+import {
+  getAuth,
+  signInWithCredential,
+  GoogleAuthProvider,
+  UserCredential,
+} from 'firebase/auth';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
+import { redirectUri } from './authConfig'; // 🧙 bring in the magic
 
-WebBrowser.maybeCompleteAuthSession(); // iOS specific fix
+WebBrowser.maybeCompleteAuthSession();
 
 export const useAuth = () => {
   const auth = getAuth();
   const [user, setUser] = useState(auth.currentUser);
-  const [, , promptAsync] = Google.useAuthRequest({
-    clientId: '807110668374-skjoprepfpn386htfkil86is43tejb7o.apps.googleusercontent.com', // from Google Cloud Console
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: '807110668374-skjoprepfpn386htfkil86is43tejb7o.apps.googleusercontent.com',
+    redirectUri, // 💫 now uses shared config!
   });
 
   useEffect(() => {
@@ -33,5 +41,8 @@ export const useAuth = () => {
     return await signInWithCredential(auth, credential);
   };
 
-  return { user, loginWithGoogle };
+  return {
+    user,
+    loginWithGoogle,
+  };
 };

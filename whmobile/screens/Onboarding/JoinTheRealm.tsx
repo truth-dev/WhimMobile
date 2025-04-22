@@ -29,6 +29,11 @@ const JoinTheRealm = () => {
   const [selectedAvatar, setSelectedAvatar] = useState('');
   const [motto, setMotto] = useState('');
 
+
+
+
+  
+
   const handleSaveProfile = async () => {
     if (!user) return Alert.alert('Error', 'You must be logged in.');
     if (!username || !selectedGuild || !selectedAvatar) {
