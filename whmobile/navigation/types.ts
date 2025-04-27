@@ -1,8 +1,13 @@
 // mobile/navigation/types.ts
 
 export type RootStackParamList = {
-    SignIn: undefined;
-    Tabs: undefined;
-    Welcome: undefined;
+  SignIn: undefined;
+  CreateAccount: undefined;
+  JoinTheRealm: undefined;
+  Tabs: undefined;
+  RealmLoading: undefined;
+  Welcome: undefined;
+  WhimMarket: undefined;
+   
   };
   

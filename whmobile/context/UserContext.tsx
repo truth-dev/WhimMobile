@@ -1,6 +1,18 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { doc, onSnapshot, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import {
+  doc,
+  onSnapshot,
+  setDoc,
+  serverTimestamp,
+  Timestamp,
+} from 'firebase/firestore';
 import { db } from '../firebase';
 
 interface ExtendedUserData {
@@ -33,54 +45,57 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+
+    // 1) Subscribe to auth state
+    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
-
-      if (firebaseUser) {
-        const userRef = doc(db, 'users', firebaseUser.uid);
-
-        // 🔁 Listen for real-time updates to user's profile
-        const unsubUserDoc = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setUserData(docSnap.data() as ExtendedUserData);
-          }
-        });
-
-        // 🔮 Set online and last active
-        await setDoc(
-          userRef,
-          {
-            online: true,
-            lastActive: serverTimestamp(),
-          },
-          { merge: true }
-        );
-
-        // 🧼 Clean up: Set offline when the app closes
-        const handleOffline = async () => {
-          await setDoc(
-            userRef,
-            { online: false, lastActive: serverTimestamp() },
-            { merge: true }
-          );
-        };
-
-        window.addEventListener('beforeunload', handleOffline);
-        return () => {
-          unsubUserDoc();
-          window.removeEventListener('beforeunload', handleOffline);
-          handleOffline();
-        };
-      }
     });
 
-    return () => unsubscribe();
-  }, []);
+    // 2) When user changes, subscribe to their Firestore doc
+    let unsubUserDoc: (() => void) | null = null;
+    let cleanupOffline: (() => void) | null = null;
 
-  const hasRole = (role: string) => {
-    return userData?.role === role;
-  };
+    if (user) {
+      const userRef = doc(db, 'users', user.uid);
+
+      // Listen for real-time updates
+      unsubUserDoc = onSnapshot(userRef, (snap) => {
+        if (snap.exists()) {
+          setUserData(snap.data() as ExtendedUserData);
+        }
+      });
+
+      // Mark online
+      setDoc(
+        userRef,
+        { online: true, lastActive: serverTimestamp() },
+        { merge: true }
+      );
+
+      // Prepare offline handler
+      cleanupOffline = () => {
+        setDoc(
+          userRef,
+          { online: false, lastActive: serverTimestamp() },
+          { merge: true }
+        );
+      };
+      window.addEventListener('beforeunload', cleanupOffline);
+    }
+
+    // Cleanup on unmount or when user changes
+    return () => {
+      unsubAuth();
+      if (unsubUserDoc) unsubUserDoc();
+      if (cleanupOffline) {
+        window.removeEventListener('beforeunload', cleanupOffline);
+        cleanupOffline();
+      }
+    };
+  }, [user]);
+
+  const hasRole = (role: string) => userData?.role === role;
 
   return (
     <UserContext.Provider value={{ user, userData, loading, hasRole }}>

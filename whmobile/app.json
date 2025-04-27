@@ -10,7 +10,7 @@
     "scheme": "com.googleusercontent.apps.807110668374-skjoprepfpn386htfkil86is43tejb7o",
     "platforms": ["ios", "android", "web"],
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/Whimlore_ImageSCN.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },

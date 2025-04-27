@@ -74,47 +74,60 @@
 //Temporary SignInScreen for testing purposes 
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase'; // your firebase.ts setup
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../firebase';
+import { withTimeout } from '../utils/timeoutPromise';
+
 
 const SignInScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [lastAttemptTimedOut, setLastAttemptTimedOut] = useState(false);
 
-  
   const handleLogin = async () => {
     try {
       setLoading(true);
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      setLastAttemptTimedOut(false);
 
-      // 🔍 Check if the user has a profile document
+      const userCredential = await withTimeout(
+        signInWithEmailAndPassword(auth, email, password),
+        10000 // 10 seconds timeout
+      );
+
+      const user = userCredential.user;
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists()) {
-        console.log('🧙‍♂️ Returning user! Welcome back.');
+      if (!userDoc.exists()) {
+        console.log('🌱 New user, signing out.');
+        await auth.signOut();
         navigation.reset({
           index: 0,
-          routes: [{ name: 'Tabs' }], // Go to main Tabs
+          routes: [{ name: 'JoinTheRealm' }],
         });
       } else {
-        console.log('🌱 New user! Time to Join the Realm.');
+        console.log('🧙 Returning user.');
         navigation.reset({
           index: 0,
-          routes: [{ name: 'JoinTheRealm' }], // Go to onboarding
+          routes: [{ name: 'Tabs' }],
         });
       }
+
     } catch (error: any) {
       console.error('Login error:', error);
-      Alert.alert('Login Failed', error.message || 'Something went wrong.');
+
+      if (error.message?.includes('timed out')) {
+        setLastAttemptTimedOut(true);
+      } else {
+        Alert.alert('Login Failed', error.message || 'Something went wrong.');
+      }
     } finally {
       setLoading(false);
     }
@@ -122,13 +135,24 @@ const SignInScreen = () => {
 
   return (
     <View style={styles.container}>
+      {/* 🪄 Magical Full Screen Loading */}
+      <Modal visible={loading} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#7c3aed" />
+          <Text style={styles.loadingText}>🔮 Connecting to the Arcane Realm...</Text>
+        </View>
+      </Modal>
+
       <Text style={styles.title}>Sign In to WhimLore</Text>
+
       <TextInput
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         style={styles.input}
         placeholderTextColor="#aaa"
+        autoCapitalize="none"
+        keyboardType="email-address"
       />
       <TextInput
         placeholder="Password"
@@ -138,8 +162,21 @@ const SignInScreen = () => {
         style={styles.input}
         placeholderTextColor="#aaa"
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Sign In</Text>}
+
+      <TouchableOpacity
+        style={[styles.button, loading && { opacity: 0.5 }]}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {lastAttemptTimedOut ? '⏳ Retry Connection' : 'Sign In'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+        <Text style={{ color: '#7c3aed', marginTop: 16 }}>
+          ✨ New Realmwalker? Create an Account!
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -153,4 +190,17 @@ const styles = StyleSheet.create({
   input: { backgroundColor: '#1f1f2f', color: '#fff', padding: 14, borderRadius: 8, marginBottom: 16 },
   button: { backgroundColor: '#7c3aed', padding: 16, borderRadius: 10, alignItems: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    color: '#ffffff',
+    fontWeight: 'bold',
+  },
 });

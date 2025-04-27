@@ -9,13 +9,14 @@ import {
 } from 'react-native';
 import { useAuth } from '../../shared-auth/useAuth';
 import { useNavigation } from '@react-navigation/native';
-import mage1 from '../../assets/avatars/mage1.png';
-import rogue1 from '../../assets/avatars/rogue1.png';
-import healer1 from '../../assets/avatars/healer1.png';
-import knight1 from '../../assets/avatars/knight1.png';
+import knight from '../../assets/avatars/knight.svg';
+import wizard from '../../assets/avatars/Wizard.svg';
+import healer from '../../assets/avatars/Healer.svg';
+import ninja from '../../assets/avatars/Ninja.svg';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { submitOnboardingProfile } from '../../utils/firestoreaddhelper';
+import { updateProfileComplete } from '../../utils/firestoreHelper';
 
 const MAX_MOTTO_LENGTH = 100;
 
@@ -50,12 +51,14 @@ const JoinTheRealm = () => {
         additionalData: { uid: user.uid }
       });
 
+      await updateProfileComplete(user.uid);
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'Welcome' }], // Show WelcomeScreen
       });
     } catch (err) {
-      console.error('🔥 Error saving profile:', err);
+      console.error('🔥 Error completing onboarding!:', err);
       Alert.alert('Error', 'Something went wrong saving your profile.');
     }
   };
@@ -118,10 +121,10 @@ const JoinTheRealm = () => {
           <Text style={styles.subtitle}>Who do you appear as in the Realms?</Text>
           <View style={styles.avatarGrid}>
             {[
-              { id: 'mage1', src: mage1 },
-              { id: 'rogue1', src: rogue1 },
-              { id: 'healer1', src: healer1 },
-              { id: 'knight1', src: knight1 },
+              { id: 'wizard1', src: wizard },
+              { id: 'knight1', src: knight },
+              { id: 'healer1', src: healer },
+              { id: 'ninja1', src: ninja },
             ].map((avatar) => (
               <TouchableOpacity
                 key={avatar.id}

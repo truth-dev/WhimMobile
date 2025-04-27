@@ -1,37 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
+import { RootStackParamList } from './types';
+
+
+import RealmLoadingScreen from '../screens/RealmLoadingScreen';
 import SignInScreen from '../screens/SignInScreen';
 import BottomTabNavigator from './BottomTabNav';
 import JoinTheRealm from '../screens/Onboarding/JoinTheRealm';
+import CreateAccountScreen from '../screens/Onboarding/CreateAccountScreen'; // Import your CreateAccountScreen
 
-type RootStackParamList = {
-  SignIn: undefined;
-  Tabs: undefined;
-  JoinTheRealm: undefined;
-  Loading: undefined;
-};
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
   const [profileComplete, setProfileComplete] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getAuth(), async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+
       if (currentUser) {
+        // 🔍 Check Firestore for profile
         const userDocRef = doc(db, 'users', currentUser.uid);
         const userDoc = await getDoc(userDocRef);
+
         setProfileComplete(userDoc.exists());
       } else {
         setProfileComplete(null);
       }
+
       setLoading(false);
     });
 
@@ -39,20 +43,19 @@ export default function RootNavigator() {
   }, []);
 
   if (loading) {
-    return null; // you could replace this with a splash screen later
+    return <RealmLoadingScreen />; // 🌟 show the loading screen while checking auth
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!user ? (
-          <Stack.Screen name="SignIn" component={SignInScreen} />
-        ) : profileComplete === false ? (
-          <Stack.Screen name="JoinTheRealm" component={JoinTheRealm} />
-        ) : (
-          <Stack.Screen name="Tabs" component={BottomTabNavigator} />
-        )}
-      </Stack.Navigator>
+
+<Stack.Navigator screenOptions={{ headerShown: false }}>
+  <Stack.Screen name="SignIn" component={SignInScreen} />
+  <Stack.Screen name="CreateAccount" component={CreateAccountScreen} />
+  <Stack.Screen name="JoinTheRealm" component={JoinTheRealm} />
+  <Stack.Screen name="Tabs" component={BottomTabNavigator} />
+</Stack.Navigator>
+      
     </NavigationContainer>
   );
 }
