@@ -26,8 +26,14 @@ const lootTable: { name: string; rarity: Rarity; chance: number}[] =[
     {name: 'Starcaller Crystal', rarity: 'legendary', chance: 10 }
 ]
 
+const totalWeight = lootTable.reduce((sum, item) => sum + item.chance, 0);
+
+if (totalWeight !== 100) {
+    console.warn(`Loot table weights sum to ${totalWeight}, expected 100`);
+}
+
 function getRandomLoot(): LootItem {
-    const roll = Math.random() * 100;
+    const roll = Math.random() * totalWeight;
     let total = 0;
 
     for(const item of lootTable){
@@ -36,7 +42,7 @@ function getRandomLoot(): LootItem {
             return {name: item.name, rarity: item.rarity};
         }
     }
-    //fallback in case no loot is generated 
+    //fallback in case no loot is generated
     return {name: 'twig of mystery', rarity: 'common'};
 }
  
