@@ -40,7 +40,7 @@
       }
     },
     "owner": "taytenacious",
-    "plugins": ["expo-secure-store", "react-native-maps", "lottie-react-native"],
+    "plugins": ["expo-secure-store", "lottie-react-native"],
     "assetBundlePatterns": ["**/*"]
   }
 }
