@@ -12,6 +12,11 @@ interface UserProfileData {
     additionalData?: Record<string, any>;
 }
 
+/**
+ * Creates or updates the user's profile document.
+ * @param user - The authenticated user.
+ * @param profileData - Optional profile fields to set or update in Firestore.
+ */
 export const createOrUpdateUserProfile = async (user: User, profileData?: UserProfileData) => {
     try{
         const userRef = doc(db, 'users', user.uid);
@@ -30,10 +35,10 @@ export const createOrUpdateUserProfile = async (user: User, profileData?: UserPr
             });
             console.log('✨ New user profile created');
         }else{
-            //Existing user, update their last login and otehr fields if necessary
+            // Existing user, update their last login and any optional fields from profileData
             await updateDoc(userRef, {
                 lastLogin: serverTimestamp(),
-            
+                ...profileData,
             });
             console.log('🔄 User profile updated with last login');
         }
