@@ -9,7 +9,7 @@ import {
   Alert,
 } from "react-native";
 import { getAuth } from "firebase/auth";
-import { useOctaviaQuest } from "../hooks/useOcativiaQuest";
+import { useOctaviaQuest } from "../hooks/useOctaviaQuest";
 import usePlayerProgress  from "../hooks/usePlayerProgress";
 import OctaviaModal from "../components/modals/OctaviaModal";
 import ShardScanner from "../components/mechanics/ShardScanner"
