@@ -20,4 +20,5 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
+// Export storage for shared Firebase Storage access in helper modules
 export { app, auth, db, storage };
