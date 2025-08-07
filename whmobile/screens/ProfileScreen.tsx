@@ -2,8 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { doc, getDoc, getFirestore } from 'firebase/firestore';
 
 interface UserProfile {
   name: string;
@@ -24,7 +23,7 @@ const ProfileScreen: React.FC = () => {
 
       if (!user) return;
 
-      const userRef = doc(db, 'users', user.uid);
+      const userRef = doc(getFirestore(), 'users', user.uid);
       const docSnap = await getDoc(userRef);
 
       if (docSnap.exists()) {

@@ -1,89 +1,76 @@
-// firebaseHelper.ts
-import { db, storage } from '../firebase'; // Adjust the import path as necessary
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// src/helpers/firebaseHelper.ts
+
+import * as FileSystem from 'expo-file-system';
+import firestore from '@react-native-firebase/firestore';
+import storage from '@react-native-firebase/storage';
+import { db } from '../firebase';  // your getFirestore(app) export
 
 export type WhimLoreEntry = {
   username: string;
-  guild: string;
-  mood: string;
-  motto?: string;
+  guild:    string;
+  mood:     string;
+  motto?:   string;
   avatarUri?: string;
   additionalData?: Record<string, any>;
 };
 
 /**
- * Uploads an image to Firebase Storage and returns its URL
+ * Downloads a remote URI to a temp file and uploads it to Firebase Storage.
+ * Returns the public download URL.
  */
-export const uploadImageAsync = async (uri: string, path: string): Promise<string> => {
+export async function uploadImageAsync(
+  uri: string,
+  remotePath: string
+): Promise<string> {
   try {
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    // 1. Download to Expo’s DocumentDirectory
+    const filename = remotePath.split('/').pop();
+    const localFile = `${FileSystem.documentDirectory}${filename}`;
+    await FileSystem.downloadAsync(uri, localFile);
 
-    const imageRef = ref(storage, path);
-    await uploadBytes(imageRef, blob);
+    // 2. Upload that file
+    const ref = storage().ref(remotePath);
+    await ref.putFile(localFile);
 
-    const downloadUrl = await getDownloadURL(imageRef);
-    return downloadUrl;
+    // 3. Get & return its URL
+    return await ref.getDownloadURL();
   } catch (err) {
-    console.error('Error uploading image:', err);
+    console.error('🔥 Error uploading image:', err);
     throw err;
   }
-};
+}
 
 /**
- * Pushes a new WhimLore profile entry to Firestore
+ * Save a new “profile” doc in Firestore under /profiles.
  */
-export const saveWhimLoreProfile = async (entry: WhimLoreEntry) => {
+export async function saveWhimLoreProfile(entry: WhimLoreEntry) {
   try {
-    let avatarUrl = null;
+    let avatarUrl: string | null = null;
     if (entry.avatarUri) {
-      const filePath = `avatars/${entry.username}-${Date.now()}.jpg`;
-      avatarUrl = await uploadImageAsync(entry.avatarUri, filePath);
+      const path = `avatars/${entry.username}-${Date.now()}.jpg`;
+      avatarUrl = await uploadImageAsync(entry.avatarUri, path);
     }
 
-    const profileRef = collection(db, 'profiles');
-    await addDoc(profileRef, {
-      username: entry.username,
-      guild: entry.guild,
-      mood: entry.mood,
-      motto: entry.motto || '',
-      avatarUrl: avatarUrl || null,
-      additionalData: entry.additionalData || {},
-      createdAt: serverTimestamp()
-    });
+    await db
+      .collection('profiles')
+      .add({
+        username:       entry.username,
+        guild:          entry.guild,
+        mood:           entry.mood,
+        motto:          entry.motto ?? '',
+        avatarUrl:     avatarUrl,
+        additionalData: entry.additionalData ?? {},
+        createdAt:     firestore.FieldValue.serverTimestamp(),
+      });
 
     console.log('✅ Profile saved successfully');
   } catch (err) {
     console.error('🔥 Error saving profile:', err);
     throw err;
   }
-};
+}
 
 /**
- * Call this during onboarding final step to save new user profile
+ * Convenient alias for your onboarding flow.
  */
-export const submitOnboardingProfile = async ({
-  username,
-  guild,
-  motto,
-  avatarUri,
-  mood = 'default',
-  additionalData
-}: {
-  username: string;
-  guild: string;
-  motto: string;
-  avatarUri?: string;
-  mood?: string;
-  additionalData?: Record<string, any>;
-}) => {
-  await saveWhimLoreProfile({
-    username,
-    guild,
-    mood,
-    motto,
-    avatarUri,
-    additionalData
-  });
-};
+export const submitOnboardingProfile = saveWhimLoreProfile;

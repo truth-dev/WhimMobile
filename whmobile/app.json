@@ -15,11 +15,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "entryPoint": "./index.js", 
-    "ios": {
-      "supportsTablet": true
-    },
+    "ios": { "supportsTablet": true },
     "android": {
+       "googleServicesFile": "./google-services.json",
       "package": "com.taytenacious.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -31,16 +29,12 @@
         }
       }
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": { "favicon": "./assets/favicon.png" },
     "extra": {
-      "eas": {
-        "projectId": "7fb1f69a-4533-4bfd-b9ab-59ea9e0dbe63"
-      }
+      "eas": { "projectId": "7fb1f69a-4533-4bfd-b9ab-59ea9e0dbe63" }
     },
     "owner": "taytenacious",
-    "plugins": ["expo-secure-store", "lottie-react-native"],
+    "plugins": ["expo-secure-store", "@react-native-firebase/app"],
     "assetBundlePatterns": ["**/*"]
   }
 }

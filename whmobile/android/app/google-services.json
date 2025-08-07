@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1004236579641",
+    "project_id": "whmobile-9e94a",
+    "storage_bucket": "whmobile-9e94a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1004236579641:android:cbd901ee543e75788b3ee8",
+        "android_client_info": {
+          "package_name": "com.taytenacious.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKRZbBkeyWguzuj42KxFasSVLiNPDwYbk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

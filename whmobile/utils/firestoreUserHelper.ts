@@ -1,49 +1,53 @@
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase'; // your firebase.ts setup
-import { User } from 'firebase/auth';
+// src/helpers/userHelper.ts
 
+import firestore from '@react-native-firebase/firestore';
+import { db } from '../firebase';
+import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
-interface UserProfileData {
-    username?: string;
-    guild?: string;
-    motto?: string;
-    avatarId?: string;
-    mood?: string;
-    additionalData?: Record<string, any>;
+export interface UserProfileData {
+  username?: string;
+  guild?: string;
+  motto?: string;
+  avatarId?: string;
+  mood?: string;
+  additionalData?: Record<string, any>;
 }
 
 /**
- * Creates or updates the user's profile document.
- * @param user - The authenticated user.
- * @param profileData - Optional profile fields to set or update in Firestore.
+ * Creates or updates the user's profile document in Firestore.
  */
-export const createOrUpdateUserProfile = async (user: User, profileData?: UserProfileData) => {
-    try{
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
+export async function createOrUpdateUserProfile(
+  user: FirebaseAuthTypes.User,
+  profileData: UserProfileData = {}
+): Promise<void> {
+  try {
+    // Reference to users/{uid}
+    const userRef = db.collection('users').doc(user.uid);
+    // Fetch the document snapshot
+    const userSnap = await userRef.get(); // DocumentSnapshot.has exists() method :contentReference[oaicite:0]{index=0}
 
-        if(!userSnap.exists()){
-            // New user, create their profile
-            await setDoc(userRef, {
-                email: user.email,
-                createdAt: serverTimestamp(),
-                lastLogin: serverTimestamp(),
-                profileComplete: false,
-                level: 1,
-                inventory: {},
-                ...profileData, // optional fields from onboarding
-            });
-            console.log('✨ New user profile created');
-        }else{
-            // Existing user, update their last login and any optional fields from profileData
-            await updateDoc(userRef, {
-                lastLogin: serverTimestamp(),
-                ...profileData,
-            });
-            console.log('🔄 User profile updated with last login');
-        }
-    }catch(err){
-        console.error('🔥 Error creating/updating user profile:', err);
-        throw new Error('Error creating/updating user profile');
+    if (!userSnap.exists()) {
+      // New user: set with server timestamps
+      await userRef.set({
+        email:           user.email,
+        createdAt:       firestore.FieldValue.serverTimestamp(), // serverTimestamp sentinel :contentReference[oaicite:1]{index=1}
+        lastLogin:       firestore.FieldValue.serverTimestamp(),
+        profileComplete: false,
+        level:           1,
+        inventory:       {},
+        ...profileData,
+      });
+      console.log('✨ New user profile created');
+    } else {
+      // Existing user: update lastLogin + any passed fields
+      await userRef.update({
+        lastLogin: firestore.FieldValue.serverTimestamp(),
+        ...profileData,
+      });
+      console.log('🔄 User profile updated with last login');
     }
+  } catch (err) {
+    console.error('🔥 Error creating/updating user profile:', err);
+    throw new Error('Error creating/updating user profile');
+  }
 }

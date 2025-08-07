@@ -1,21 +1,25 @@
+// src/screens/LoungeScreen.tsx
+
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View, Text, TextInput, Button, ScrollView,
-  StyleSheet, KeyboardAvoidingView, Platform
+  View,
+  Text,
+  TextInput,
+  Button,
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
-import {
-  collection, onSnapshot, orderBy,
-  query, addDoc, serverTimestamp, Timestamp
-} from "firebase/firestore";
-import { db } from "../firebase";
-import { getAuth } from "firebase/auth";
+import { auth, db } from "../firebase";  // native RN-Firebase instances
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
 import { GUILD_COLORS } from '../constants/guilds';
 
 interface LoungeMessage {
   id: string;
   text: string;
   authorName: string;
-  createdAt: Timestamp;
+  createdAt: FirebaseFirestoreTypes.Timestamp;
   guild: string;
   mood?: string;
   role?: string;
@@ -28,34 +32,38 @@ export default function LoungeScreen() {
   const [riddleMode, setRiddleMode] = useState(false);
   const [castingUserId, setCastingUserId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const auth = getAuth();
-  const user = auth.currentUser;
+
+  const user = auth.currentUser;  // native auth instance
 
   useEffect(() => {
-    const q = query(collection(db, "loungeMessages"), orderBy("createdAt", "asc"));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const msgList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as LoungeMessage[];
+    // Build a query on the native Firestore instance
+    const q = db
+      .collection('loungeMessages')
+      .orderBy('createdAt', 'asc');
+
+    const unsubscribe = q.onSnapshot(snapshot => {
+      const msgList = snapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...(docSnap.data() as Omit<LoungeMessage, 'id'>)
+      }));
       setMessages(msgList);
       scrollRef.current?.scrollToEnd({ animated: true });
     });
 
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
   const sendMessage = async () => {
     if (!user || newMessage.trim() === "") return;
 
-    await addDoc(collection(db, "loungeMessages"), {
-      text: newMessage.trim(),
-      authorName: user.displayName || "Mysterious Mage",
-      userId: user.uid,
-      createdAt: serverTimestamp(),
-      mood: "🌙",
-      guild: "ChronoGuard",
-      role: "Lorekeeper",
+    await db.collection('loungeMessages').add({
+      text:        newMessage.trim(),
+      authorName:  user.displayName || 'Mysterious Mage',
+      userId:      user.uid,
+      createdAt:   firestore.FieldValue.serverTimestamp(),
+      mood:        '🌙',
+      guild:       'ChronoGuard',
+      role:        'Lorekeeper',
     });
 
     setNewMessage("");
@@ -63,20 +71,25 @@ export default function LoungeScreen() {
   };
 
   const obscureMessage = (text: string) =>
-    text.split(' ').map((word) =>
-      word.length > 2 ? word[0] + '*'.repeat(word.length - 2) + word[word.length - 1] : '*'.repeat(word.length)
-    ).join(' ');
+    text
+      .split(' ')
+      .map(word =>
+        word.length > 2
+          ? word[0] + '*'.repeat(word.length - 2) + word[word.length - 1]
+          : '*'.repeat(word.length)
+      )
+      .join(' ');
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
       <View style={styles.toggleRow}>
         <Text style={styles.toggleLabel}>🧩 Riddle Mode</Text>
         <Button
-          title={riddleMode ? "On" : "Off"}
-          color={riddleMode ? "#a78bfa" : "#444"}
+          title={riddleMode ? 'On' : 'Off'}
+          color={riddleMode ? '#a78bfa' : '#444'}
           onPress={() => setRiddleMode(!riddleMode)}
         />
       </View>
@@ -86,7 +99,7 @@ export default function LoungeScreen() {
         ref={scrollRef}
         onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
       >
-        {messages.map((msg) => (
+        {messages.map(msg => (
           <View
             key={msg.id}
             style={[
@@ -101,8 +114,8 @@ export default function LoungeScreen() {
                   { backgroundColor: GUILD_COLORS[msg.guild] || '#888' }
                 ]}
               />
-              <Text style={[styles.author, { color: GUILD_COLORS[msg.guild] || '#fff' }]}>
-                [{msg.role || "Adventurer"}] {msg.authorName} {msg.mood || ""}
+              <Text style={[styles.author, { color: GUILD_COLORS[msg.guild] || '#fff' }]}>  
+                [{msg.role || 'Adventurer'}] {msg.authorName} {msg.mood || ''}
               </Text>
             </View>
             <Text style={styles.messageText}>
@@ -115,8 +128,9 @@ export default function LoungeScreen() {
       <View style={styles.inputRow}>
         <TextInput
           placeholder="Speak, friend, and enter..."
+          placeholderTextColor="#aaa"
           value={newMessage}
-          onChangeText={(text) => {
+          onChangeText={text => {
             setNewMessage(text);
             setCastingUserId(user?.uid || null);
           }}
@@ -130,15 +144,15 @@ export default function LoungeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#111" },
+  container: { flex: 1, backgroundColor: '#111' },
   messages: { padding: 10 },
   messageBubble: {
-    backgroundColor: "#222",
+    backgroundColor: '#222',
     padding: 10,
     borderRadius: 10,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: '#333',
   },
   castingHighlight: {
     shadowColor: '#a78bfa',
@@ -149,8 +163,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   messageHeader: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 2,
   },
   guildDot: {
@@ -160,20 +174,20 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   author: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     fontSize: 14,
   },
-  messageText: { color: "#eee", paddingLeft: 16 },
+  messageText: { color: '#eee', paddingLeft: 16 },
   inputRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     padding: 10,
-    backgroundColor: "#1f1f1f",
-    alignItems: "center",
+    backgroundColor: '#1f1f1f',
+    alignItems: 'center',
   },
   input: {
     flex: 1,
-    backgroundColor: "#333",
-    color: "#fff",
+    backgroundColor: '#333',
+    color: '#fff',
     padding: 10,
     borderRadius: 8,
     marginRight: 10,

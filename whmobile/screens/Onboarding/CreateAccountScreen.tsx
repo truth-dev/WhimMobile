@@ -13,10 +13,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 
-import { auth, db } from '../../firebase'; 
+import { getAuth } from 'firebase/auth';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+const auth = getAuth();
+import { doc, setDoc, serverTimestamp, getFirestore } from 'firebase/firestore';
+
+const db = getFirestore();
 import LoadingPortal from '../../components/LoadingPortal';
 
 const CreateAccountScreen: React.FC = () => {

@@ -1,24 +1,23 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// firebase.ts
 
+// 1️⃣ Import the modular entrypoint
+import { getApp } from '@react-native-firebase/app';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBdnTHdYh29-jKiEyy-mfeb9PTbliarJB8",
-  databaseURL: "https://whimlore-dc9be-default-rtdb.firebaseio.com",
-  authDomain: "whimlore-dc9be.firebaseapp.com",
-  projectId: "whimlore-dc9be",
-  storageBucket: "whimlore-dc9be.appspot.com",
-  messagingSenderId: "807110668374",
-  appId: "1:807110668374:web:e1f92208620a2530084bf7",
-  measurementId: "G-0JEPENJ42M",
-};
+// 2️⃣ Import each service’s getter
+import { getAuth }      from '@react-native-firebase/auth';
+import { getFirestore } from '@react-native-firebase/firestore';
+import { getStorage }   from '@react-native-firebase/storage';
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
+// 3️⃣ Grab the default app instance synchronously
+const app = getApp();  // ✅ no Promise, no “call Signature” errors :contentReference[oaicite:0]{index=0}
 
-// Export storage for shared Firebase Storage access in helper modules
-export { app, auth, db, storage };
+// 4️⃣ Initialize each service with that app
+export const auth  = getAuth(app);
+export const db    = getFirestore(app);
+export const storageService = getStorage(app);
+
+// 5️⃣ (Optional) Sanity-check
+console.log('🔥 Firebase ready:', {
+  name: app.name,
+  options: app.options
+});
