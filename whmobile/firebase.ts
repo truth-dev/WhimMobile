@@ -1,23 +1,23 @@
-// firebase.ts
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 
-// 1️⃣ Import the modular entrypoint
-import { getApp } from '@react-native-firebase/app';
+const firebaseConfig = {
+   apiKey: "AIzaSyAiAyhjuzwkGFzXDWyILZrtiwMkPYT92RU",
+  authDomain: "whmobile-9e94a.firebaseapp.com",
+  projectId: "whmobile-9e94a",
+  storageBucket: "whmobile-9e94a.firebasestorage.app",
+  messagingSenderId: "1004236579641",
+  appId: "1:1004236579641:web:46d782d0c231ae0b8b3ee8",
+  measurementId: "G-PH4K6FQDBX"
+};
 
-// 2️⃣ Import each service’s getter
-import { getAuth }      from '@react-native-firebase/auth';
-import { getFirestore } from '@react-native-firebase/firestore';
-import { getStorage }   from '@react-native-firebase/storage';
+const app =
+  getApps().length > 0
+    ? getApp()
+    : initializeApp(firebaseConfig);
 
-// 3️⃣ Grab the default app instance synchronously
-const app = getApp();  // ✅ no Promise, no “call Signature” errors :contentReference[oaicite:0]{index=0}
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-// 4️⃣ Initialize each service with that app
-export const auth  = getAuth(app);
-export const db    = getFirestore(app);
-export const storageService = getStorage(app);
-
-// 5️⃣ (Optional) Sanity-check
-console.log('🔥 Firebase ready:', {
-  name: app.name,
-  options: app.options
-});
+export { app, auth, db };

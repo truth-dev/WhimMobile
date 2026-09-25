@@ -5,7 +5,7 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   doc,
   onSnapshot,
@@ -13,7 +13,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 
 interface ExtendedUserData {
   uid: string;
@@ -43,57 +43,16 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<ExtendedUserData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const auth = getAuth();
+ useEffect(() => {
+  const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+    setUser(firebaseUser);
+    setLoading(false);
+  });
 
-    // 1) Subscribe to auth state
-    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
-      setLoading(false);
-    });
-
-    // 2) When user changes, subscribe to their Firestore doc
-    let unsubUserDoc: (() => void) | null = null;
-    let cleanupOffline: (() => void) | null = null;
-
-    if (user) {
-      const userRef = doc(db, 'users', user.uid);
-
-      // Listen for real-time updates
-      unsubUserDoc = onSnapshot(userRef, (snap) => {
-        if (snap.exists()) {
-          setUserData(snap.data() as ExtendedUserData);
-        }
-      });
-
-      // Mark online
-      setDoc(
-        userRef,
-        { online: true, lastActive: serverTimestamp() },
-        { merge: true }
-      );
-
-      // Prepare offline handler
-      cleanupOffline = () => {
-        setDoc(
-          userRef,
-          { online: false, lastActive: serverTimestamp() },
-          { merge: true }
-        );
-      };
-      window.addEventListener('beforeunload', cleanupOffline);
-    }
-
-    // Cleanup on unmount or when user changes
-    return () => {
-      unsubAuth();
-      if (unsubUserDoc) unsubUserDoc();
-      if (cleanupOffline) {
-        window.removeEventListener('beforeunload', cleanupOffline);
-        cleanupOffline();
-      }
-    };
-  }, [user]);
+  return () => {
+    unsubAuth();
+  };
+}, []);
 
   const hasRole = (role: string) => userData?.role === role;
 

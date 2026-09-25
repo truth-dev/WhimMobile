@@ -116,37 +116,50 @@ const JoinTheRealm = () => {
       )}
 
       {step === 3 && (
-        <>
-          <Text style={styles.title}>Step 3: Select Your Avatar</Text>
-          <Text style={styles.subtitle}>Who do you appear as in the Realms?</Text>
-          <View style={styles.avatarGrid}>
-            {[
-              { id: 'wizard1', src: wizard },
-              { id: 'knight1', src: knight },
-              { id: 'healer1', src: healer },
-              { id: 'ninja1', src: ninja },
-            ].map((avatar) => (
-              <TouchableOpacity
-                key={avatar.id}
-                onPress={() => setSelectedAvatar(avatar.id)}
-                style={[
-                  styles.avatarOption,
-                  selectedAvatar === avatar.id && styles.selectedAvatar,
-                ]}
-              >
-                {/* <Image source={avatar.src} style={styles.avatarImage} /> */}
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            style={[styles.button, !selectedAvatar && { opacity: 0.6 }]}
-            onPress={() => selectedAvatar && setStep(4)}
-            disabled={!selectedAvatar}
-          >
-            <Text style={styles.buttonText}>Next ➡️</Text>
-          </TouchableOpacity>
-        </>
-      )}
+  <>
+    <Text style={styles.title}>Step 3: Select Your Avatar</Text>
+    <Text style={styles.subtitle}>
+      Who do you appear as in the Realms?
+    </Text>
+
+    <View style={styles.avatarGrid}>
+      {[
+        { id: 'wizard1', icon: '🧙', label: 'Wizard' },
+        { id: 'knight1', icon: '🛡️', label: 'Knight' },
+        { id: 'healer1', icon: '🌿', label: 'Healer' },
+        { id: 'ninja1', icon: '🥷', label: 'Ninja' },
+      ].map((avatar) => (
+        <TouchableOpacity
+          key={avatar.id}
+          onPress={() => setSelectedAvatar(avatar.id)}
+          style={[
+            styles.avatarOption,
+            selectedAvatar === avatar.id && styles.selectedAvatar,
+          ]}
+        >
+          <Text style={styles.avatarIcon}>
+            {avatar.icon}
+          </Text>
+
+          <Text style={styles.avatarLabel}>
+            {avatar.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+
+    <TouchableOpacity
+      style={[
+        styles.button,
+        !selectedAvatar && { opacity: 0.6 },
+      ]}
+      onPress={() => setStep(4)}
+      disabled={!selectedAvatar}
+    >
+      <Text style={styles.buttonText}>Next ➡️</Text>
+    </TouchableOpacity>
+  </>
+)}
 
       {step === 4 && (
         <>
@@ -241,15 +254,28 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 20,
   },
-  avatarOption: {
-    width: 80,
-    height: 80,
-    marginBottom: 12,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
+ avatarOption: {
+  width: '47%',
+  minHeight: 110,
+  marginBottom: 12,
+  borderRadius: 12,
+  borderWidth: 2,
+  borderColor: '#33334a',
+  backgroundColor: '#1f1f2f',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: 12,
+},
+avatarIcon: {
+  fontSize: 42,
+  marginBottom: 8,
+},
+
+avatarLabel: {
+  color: '#fff',
+  fontSize: 15,
+  fontWeight: '600',
+},
   selectedAvatar: {
     borderColor: '#7c3aed',
   },

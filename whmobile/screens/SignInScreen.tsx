@@ -11,15 +11,28 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  UserCredential,
+} from 'firebase/auth';
+
+import {
+  doc,
+  getDoc,
+} from 'firebase/firestore';
+
 import { RootStackParamList } from '../navigation/types';
 import { withTimeout } from '../utils/timeoutPromise';
 import { auth, db } from '../firebase';
-import { FirebaseAuthTypes } from '@react-native-firebase/auth';
 
 const SignInScreen: React.FC = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,28 +44,45 @@ const SignInScreen: React.FC = () => {
       setLoading(true);
       setTimedOut(false);
 
-      const userCredential = await withTimeout<FirebaseAuthTypes.UserCredential>(
-        auth.signInWithEmailAndPassword(email, password),
+      const userCredential = await withTimeout<UserCredential>(
+        signInWithEmailAndPassword(
+          auth,
+          email.trim(),
+          password
+        ),
         10_000
       );
+
       const user = userCredential.user;
 
-      const userDocSnap = await db.collection('users').doc(user.uid).get();
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDocSnap = await getDoc(userDocRef);
 
-      if (!userDocSnap.exists) {
-        // New user: sign out and navigate to onboarding
-        await auth.signOut();
-        navigation.reset({ index: 0, routes: [{ name: 'JoinTheRealm' }] });
+      if (!userDocSnap.exists()) {
+        // User has Firebase Auth account but no Whimlore profile yet.
+        await signOut(auth);
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'JoinTheRealm' }],
+        });
       } else {
-        // Returning user: navigate to main app
-        navigation.reset({ index: 0, routes: [{ name: 'Tabs' }] });
+        // Returning Whimlore user.
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Tabs' }],
+        });
       }
     } catch (err: any) {
       console.error('Login error:', err);
+
       if (err.message?.includes('timed out')) {
         setTimedOut(true);
       } else {
-        Alert.alert('Login Failed', err.message || 'Something went wrong.');
+        Alert.alert(
+          'Login Failed',
+          err.message || 'Something went wrong.'
+        );
       }
     } finally {
       setLoading(false);
@@ -61,14 +91,26 @@ const SignInScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Modal visible={loading} transparent animationType="fade">
+      <Modal
+        visible={loading}
+        transparent
+        animationType="fade"
+      >
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#7c3aed" />
-          <Text style={styles.loadingText}>🔮 Connecting to the Arcane Realm...</Text>
+          <ActivityIndicator
+            size="large"
+            color="#7c3aed"
+          />
+
+          <Text style={styles.loadingText}>
+            🔮 Connecting to the Arcane Realm...
+          </Text>
         </View>
       </Modal>
 
-      <Text style={styles.title}>Sign In to WhimLore</Text>
+      <Text style={styles.title}>
+        Sign In to WhimLore
+      </Text>
 
       <TextInput
         placeholder="Email"
@@ -79,6 +121,7 @@ const SignInScreen: React.FC = () => {
         keyboardType="email-address"
         style={styles.input}
       />
+
       <TextInput
         placeholder="Password"
         placeholderTextColor="#aaa"
@@ -89,16 +132,25 @@ const SignInScreen: React.FC = () => {
       />
 
       <TouchableOpacity
-        style={[styles.button, loading && { opacity: 0.5 }]}
+        style={[
+          styles.button,
+          loading && { opacity: 0.5 },
+        ]}
         onPress={handleLogin}
         disabled={loading}
       >
         <Text style={styles.buttonText}>
-          {timedOut ? '⏳ Retry Connection' : 'Sign In'}
+          {timedOut
+            ? '⏳ Retry Connection'
+            : 'Sign In'}
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('CreateAccount')}>
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('CreateAccount')
+        }
+      >
         <Text style={styles.linkText}>
           ✨ New Realmwalker? Create an Account!
         </Text>
@@ -116,6 +168,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#0f0f1a',
   },
+
   title: {
     fontSize: 24,
     fontWeight: '700',
@@ -123,6 +176,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
+
   input: {
     backgroundColor: '#1f1f2f',
     color: '#fff',
@@ -130,14 +184,25 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
   },
+
   button: {
     backgroundColor: '#7c3aed',
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  linkText: { color: '#7c3aed', marginTop: 16, textAlign: 'center' },
+
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  linkText: {
+    color: '#7c3aed',
+    marginTop: 16,
+    textAlign: 'center',
+  },
 
   loadingOverlay: {
     flex: 1,
@@ -145,6 +210,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   loadingText: {
     marginTop: 20,
     fontSize: 18,
