@@ -9,14 +9,10 @@ import {
 } from 'react-native';
 import { useAuth } from '../../shared-auth/useAuth';
 import { useNavigation } from '@react-navigation/native';
-import knight from '../../assets/avatars/knight.svg';
-import wizard from '../../assets/avatars/Wizard.svg';
-import healer from '../../assets/avatars/Healer.svg';
-import ninja from '../../assets/avatars/Ninja.svg';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { submitOnboardingProfile } from '../../utils/firestoreaddhelper';
-import { updateProfileComplete } from '../../utils/firestoreHelper';
+
 
 const MAX_MOTTO_LENGTH = 100;
 
@@ -35,33 +31,54 @@ const JoinTheRealm = () => {
 
   
 
-  const handleSaveProfile = async () => {
-    if (!user) return Alert.alert('Error', 'You must be logged in.');
-    if (!username || !selectedGuild || !selectedAvatar) {
-      return Alert.alert('Missing Info', 'Please complete all steps.');
-    }
+ const handleSaveProfile = async () => {
+  if (!user) {
+    return Alert.alert(
+      'Error',
+      'You must be logged in.'
+    );
+  }
 
-    try {
-      await submitOnboardingProfile({
-        username,
-        guild: selectedGuild,
-        motto,
-        avatarUri: selectedAvatar, // you may want to replace this with an actual image URI later
-        mood: 'whimsical', // or pull from a mood picker if implemented
-        additionalData: { uid: user.uid }
-      });
+  if (
+    !username ||
+    !selectedGuild ||
+    !selectedAvatar
+  ) {
+    return Alert.alert(
+      'Missing Info',
+      'Please complete all steps.'
+    );
+  }
 
-      await updateProfileComplete(user.uid);
+  try {
+    await submitOnboardingProfile({
+      uid: user.uid,
+      username,
+      guild: selectedGuild,
+      motto,
+      avatarId: selectedAvatar,
+      mood: 'whimsical',
+    });
 
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Welcome' }], // Show WelcomeScreen
-      });
-    } catch (err) {
-      console.error('🔥 Error completing onboarding!:', err);
-      Alert.alert('Error', 'Something went wrong saving your profile.');
-    }
-  };
+    /*
+      Don't manually navigate here.
+
+      RootNavigator is watching users/{uid}.
+      Once this document exists with profileComplete=true,
+      RootNavigator should automatically switch to Tabs.
+    */
+  } catch (err) {
+    console.error(
+      '🔥 Error completing onboarding!:',
+      err
+    );
+
+    Alert.alert(
+      'Error',
+      'Something went wrong saving your profile.'
+    );
+  }
+};
 
   return (
     <View style={styles.container}>

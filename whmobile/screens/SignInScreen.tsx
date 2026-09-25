@@ -17,18 +17,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import {
   signInWithEmailAndPassword,
-  signOut,
   UserCredential,
 } from 'firebase/auth';
 
-import {
-  doc,
-  getDoc,
-} from 'firebase/firestore';
-
 import { RootStackParamList } from '../navigation/types';
 import { withTimeout } from '../utils/timeoutPromise';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
 
 const SignInScreen: React.FC = () => {
   const navigation =
@@ -44,7 +38,7 @@ const SignInScreen: React.FC = () => {
       setLoading(true);
       setTimedOut(false);
 
-      const userCredential = await withTimeout<UserCredential>(
+      await withTimeout<UserCredential>(
         signInWithEmailAndPassword(
           auth,
           email.trim(),
@@ -53,26 +47,13 @@ const SignInScreen: React.FC = () => {
         10_000
       );
 
-      const user = userCredential.user;
+      /*
+        That's it.
 
-      const userDocRef = doc(db, 'users', user.uid);
-      const userDocSnap = await getDoc(userDocRef);
-
-      if (!userDocSnap.exists()) {
-        // User has Firebase Auth account but no Whimlore profile yet.
-        await signOut(auth);
-
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'JoinTheRealm' }],
-        });
-      } else {
-        // Returning Whimlore user.
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Tabs' }],
-        });
-      }
+        RootNavigator is watching Firebase Auth.
+        Once sign-in succeeds, RootNavigator decides whether
+        this person needs onboarding or should enter the app.
+      */
     } catch (err: any) {
       console.error('Login error:', err);
 
